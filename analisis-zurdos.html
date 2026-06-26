@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis de Resultados — Zurdos: La otra mano</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --mg: #e0007a;
+    --mg2: #ff4da6;
+    --mg3: #b00060;
+    --mg-dim: rgba(224,0,122,0.13);
+    --bg: #111111;
+    --surface: rgba(255,255,255,0.05);
+    --surface2: rgba(255,255,255,0.08);
+    --text: #f0ede8;
+    --text-muted: #888580;
+    --border: rgba(255,255,255,0.1);
+    --radius: 12px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--bg);
+    background-image: url('zurdos_mm__27_.png');
+    background-size: cover;
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background-image: url('zurdos_mm__26_.png');
+    background-size: cover;
+    background-position: center top;
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+    position: relative;
+    border-bottom: 1px solid rgba(224,0,122,0.3);
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none;
+  }
+  header > * { position: relative; z-index: 1; }
+
+  .eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--mg2);
+    margin-bottom: 0.85rem;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 3rem);
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+    letter-spacing: -0.02em;
+  }
+  h1 span { color: var(--mg2); }
+  .tagline {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 1.5rem;
+    font-style: italic;
+  }
+  .pills {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pill {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.04em;
+  }
+  .pill.accent { background: rgba(224,0,122,0.25); border-color: rgba(224,0,122,0.5); color: var(--mg2); }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.88);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(224,0,122,0.2);
+    z-index: 100;
+    padding: 0 1.5rem;
+  }
+  .nav-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-inner::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 1rem 1rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--mg2); border-bottom-color: var(--mg2); }
+
+  /* MAIN */
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* SECTIONS */
+  .section { display: none; animation: fadein 0.25s ease; }
+  .section.active { display: block; }
+  @keyframes fadein { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  /* SECTION TITLE */
+  .sec-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+  .sec-title span { color: var(--mg2); }
+
+  /* STAT STRIP */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.75rem;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    backdrop-filter: blur(8px);
+  }
+  .stat-card .val {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--mg2);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .stat-card .lbl {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  /* GRID */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 1rem; }
+  @media (max-width: 580px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* CHART CARD */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(8px);
+  }
+  .chart-card.full { margin-bottom: 1.25rem; }
+  .chart-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* INSIGHT */
+  .insight {
+    background: var(--mg-dim);
+    border: 1px solid rgba(224,0,122,0.2);
+    border-left: 3px solid var(--mg);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.75rem;
+    font-size: 12.5px;
+    font-weight: 400;
+    color: rgba(240,237,232,0.9);
+    line-height: 1.7;
+    backdrop-filter: blur(8px);
+  }
+  .insight strong { color: var(--mg2); font-weight: 700; }
+
+  /* LEGEND */
+  .legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .legend-row span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* WORD CLOUD */
+  .word-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 0.75rem;
+  }
+  .word {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .word.big { font-size: 14px; font-weight: 700; color: var(--mg2); border-color: rgba(224,0,122,0.35); background: var(--mg-dim); }
+  .word.med { font-size: 13px; font-weight: 600; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+  footer span { color: var(--mg2); }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Capítulo III · Trabajo de campo</p>
+  <h1>Análisis de <span>Resultados</span></h1>
+  <p class="tagline">Zurdos: La otra mano — Encuesta Nacional 2026</p>
+  <div class="pills">
+    <span class="pill accent">192 participantes</span>
+    <span class="pill">Google Forms</span>
+    <span class="pill">8–20 junio 2026</span>
+    <span class="pill">Chile</span>
+    <span class="pill">22 preguntas</span>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="show('perfil',this)">👤 Perfil</button>
+    <button class="nav-btn" onclick="show('escolar',this)">🏫 Entorno escolar</button>
+    <button class="nav-btn" onclick="show('objetos',this)">✂️ Objetos</button>
+    <button class="nav-btn" onclick="show('espacios',this)">🪑 Espacios</button>
+    <button class="nav-btn" onclick="show('inclusion',this)">💡 Inclusión</button>
+    <button class="nav-btn" onclick="show('opinion',this)">💬 Opinión</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- PERFIL -->
+  <div id="perfil" class="section active">
+    <p class="sec-title">Perfil del <span>encuestado</span></p>
+    <div class="stat-strip">
+      <div class="stat-card"><div class="val">192</div><div class="lbl">personas zurdas encuestadas en Chile</div></div>
+      <div class="stat-card"><div class="val">75%</div><div class="lbl">tomó conciencia de su lateralidad antes de los 6 años</div></div>
+      <div class="stat-card"><div class="val">57%</div><div class="lbl">tiene al menos un familiar zurdo</div></div>
+      <div class="stat-card"><div class="val">65%</div><div class="lbl">tiene entre 18 y 35 años</div></div>
+    </div>
+    <div class="grid2">
+      <div class="chart-card">
+        <div class="chart-label">Edad en que supo que era zurdo/a</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c_edad" role="img" aria-label="Edad de conciencia de lateralidad"></canvas></div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:#e0007a"></span>Antes de los 4 años (46%)</span>
+          <span><span class="leg-dot" style="background:#ff4da6"></span>4–6 años (29%)</span>
+          <span><span class="leg-dot" style="background:#555"></span>No recuerda (20%)</span>
+          <span><span class="leg-dot" style="background:#888"></span>7–10 años (3%)</span>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">Rango de edad</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c_rango" role="img" aria-label="Rango de edad de encuestados"></canvas></div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:#e0007a"></span>26–35 años (42%)</span>
+          <span><span class="leg-dot" style="background:#ff4da6"></span>36–50 años (23%)</span>
+          <span><span class="leg-dot" style="background:#b00060"></span>18–25 años (22%)</span>
+          <span><span class="leg-dot" style="background:#555"></span>Otros (14%)</span>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-label">¿Hay otras personas zurdas en tu familia?</div>
+      <div class="chart-wrap" style="height:170px"><canvas id="c_familia" role="img" aria-label="Presencia de zurdos en familia"></canvas></div>
+    </div>
+    <div class="insight">La lateralidad se manifiesta y reconoce de forma muy temprana: el <strong>75% supo que era zurdo/a antes de los 6 años</strong>. Más de la mitad tiene familiares zurdos, lo que es coherente con la base genética de la lateralidad documentada en el marco teórico del proyecto.</div>
+  </div>
+
+  <!-- ESCOLAR -->
+  <div id="escolar" class="section">
+    <p class="sec-title">Experiencias en el entorno <span>escolar</span></p>
+    <div class="stat-strip">
+      <div class="stat-card"><div class="val">79%</div><div class="lbl">mancha o corre la tinta al escribir</div></div>
+      <div class="stat-card"><div class="val">30%</div><div class="lbl">vivió algún intento de corrección forzada</div></div>
+      <div class="stat-card"><div class="val">72%</div><div class="lbl">tuvo problemas con la paleta de la silla escolar</div></div>
+      <div class="stat-card"><div class="val">47%</div><div class="lbl">recibió burlas o comentarios negativos</div></div>
+    </div>
+    <div class="grid2">
+      <div class="chart-card">
+        <div class="chart-label">¿Manchas o corres la tinta al escribir?</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c_tinta" role="img" aria-label="Manchado de tinta al escribir"></canvas></div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:#e0007a"></span>A veces (45%)</span>
+          <span><span class="leg-dot" style="background:#ff4da6"></span>Sí, siempre (34%)</span>
+          <span><span class="leg-dot" style="background:#555"></span>Casi nunca (19%)</span>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">¿Alguien intentó cambiarte la mano?</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c_correccion" role="img" aria-label="Corrección forzada de mano"></canvas></div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:#444"></span>No, nunca (60%)</span>
+          <span><span class="leg-dot" style="background:#e0007a"></span>Sí alguna vez (20%)</span>
+          <span><span class="leg-dot" style="background:#888"></span>No recuerda (9%)</span>
+          <span><span class="leg-dot" style="background:#ff4da6"></span>Sí, insistentemente (9%)</span>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-label">Estrategia de escritura utilizada</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c_escritura" role="img" aria-label="Estrategia de escritura"></canvas></div>
+    </div>
+    <div class="insight">El <strong>72,4% desarrolló alguna estrategia propia de escritura</strong> — inclinando el papel, girando la muñeca o variando según la situación. Este aprendizaje adicional no está contemplado en ningún currículum escolar. La corrección forzada no es solo historia: el <strong>29,7% la vivió en algún grado</strong>, y el <strong>35,4% recibió burlas disfrazadas de humor</strong>.</div>
+  </div>
+
+  <!-- OBJETOS -->
+  <div id="objetos" class="section">
+    <p class="sec-title">Objetos y productos <span>cotidianos</span></p>
+    <div class="stat-strip">
+      <div class="stat-card"><div class="val">82%</div><div class="lbl">encuentra incómodo el cuaderno con espiral</div></div>
+      <div class="stat-card"><div class="val">69%</div><div class="lbl">aprendió a usar tijeras normales por falta de alternativa</div></div>
+      <div class="stat-card"><div class="val">79%</div><div class="lbl">usa el mouse con la mano derecha por adaptación</div></div>
+    </div>
+    <div class="grid2">
+      <div class="chart-card">
+        <div class="chart-label">El cuaderno con espiral, ¿te resulta incómodo?</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c_espiral" role="img" aria-label="Incomodidad cuaderno espiral"></canvas></div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:#e0007a"></span>Muy incómodo (49%)</span>
+          <span><span class="leg-dot" style="background:#ff4da6"></span>A veces molesta (33%)</span>
+          <span><span class="leg-dot" style="background:#555"></span>Me he adaptado (13%)</span>
+          <span><span class="leg-dot" style="background:#888"></span>No uso espiral (4%)</span>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">Uso de tijeras</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c_tijeras" role="img" aria-label="Uso de tijeras"></canvas></div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:#e0007a"></span>Aprendió con normales (69%)</span>
+          <span><span class="leg-dot" style="background:#ff4da6"></span>Tiene tijeras zurdo (13%)</span>
+          <span><span class="leg-dot" style="background:#555"></span>Las evita (9%)</span>
+          <span><span class="leg-dot" style="background:#888"></span>Nunca se lo planteó (8%)</span>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-label">Uso del mouse</div>
+      <div class="chart-wrap" style="height:130px"><canvas id="c_mouse" role="img" aria-label="Uso del mouse"></canvas></div>
+    </div>
+    <div class="insight">Las tijeras son el símbolo más claro de adaptación forzada: <strong>el 69% aprendió a usarlas normales simplemente porque no había alternativa</strong>. Solo el 13% tiene tijeras para zurdo/a. La adaptación tecnológica sigue el mismo patrón: el <strong>79% usa el mouse con la mano derecha</strong>, y un 36% ni siquiera sabía que podía cambiarlo.</div>
+  </div>
+
+  <!-- ESPACIOS -->
+  <div id="espacios" class="section">
+    <p class="sec-title">Espacios físicos y <span>accesibilidad</span></p>
+    <div class="stat-strip">
+      <div class="stat-card"><div class="val">72%</div><div class="lbl">tuvo problemas con la paleta lateral de la silla escolar</div></div>
+      <div class="stat-card"><div class="val">75%</div><div class="lbl">ha chocado codos con alguien al comer</div></div>
+    </div>
+    <div class="grid2">
+      <div class="chart-card">
+        <div class="chart-label">¿La paleta de la silla te quedaba en el lado incorrecto?</div>
+        <div class="chart-wrap" style="height:210px"><canvas id="c_silla" role="img" aria-label="Problema con paleta de silla"></canvas></div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:#e0007a"></span>Siempre fue problema (45%)</span>
+          <span><span class="leg-dot" style="background:#ff4da6"></span>A veces (28%)</span>
+          <span><span class="leg-dot" style="background:#555"></span>Había sillas adaptadas (17%)</span>
+          <span><span class="leg-dot" style="background:#888"></span>No aplica (9%)</span>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">¿Has chocado codos al comer?</div>
+        <div class="chart-wrap" style="height:210px"><canvas id="c_codos" role="img" aria-label="Choque de codos al comer"></canvas></div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:#e0007a"></span>Sí, alguna vez (53%)</span>
+          <span><span class="leg-dot" style="background:#555"></span>No, nunca (26%)</span>
+          <span><span class="leg-dot" style="background:#ff4da6"></span>Sí, constantemente (22%)</span>
+        </div>
+      </div>
+    </div>
+    <div class="insight">El choque de codos parece menor, pero encarna perfectamente la idea central del proyecto: <strong>el entorno diestro genera roces cotidianos, literales y simbólicos</strong>. La paleta lateral de la silla, en tanto, concentra la exclusión física más documentada: el <strong>72% la vivió como un problema real</strong> en algún momento de su vida escolar.</div>
+  </div>
+
+  <!-- INCLUSION -->
+  <div id="inclusion" class="section">
+    <p class="sec-title">Conocimiento sobre inclusión y <span>diseño</span></p>
+    <div class="stat-strip">
+      <div class="stat-card"><div class="val">74%</div><div class="lbl">no ha modificado ninguna configuración en sus dispositivos</div></div>
+      <div class="stat-card"><div class="val">36%</div><div class="lbl">no sabía que podía adaptar sus dispositivos</div></div>
+      <div class="stat-card"><div class="val">14%</div><div class="lbl">ha realizado algún ajuste de accesibilidad digital</div></div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-label">¿Has cambiado la configuración de tus dispositivos para adaptarlos?</div>
+      <div class="chart-wrap" style="height:170px"><canvas id="c_config" role="img" aria-label="Configuración de dispositivos para zurdos"></canvas></div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-label">Mitos y creencias más frecuentes mencionados</div>
+      <div class="word-cloud">
+        <span class="word big">La mano del diablo</span>
+        <span class="word big">Son más inteligentes</span>
+        <span class="word med">Son más creativos</span>
+        <span class="word med">Viven menos años</span>
+        <span class="word med">Otro hemisferio desarrollado</span>
+        <span class="word">Mejores en deportes</span>
+        <span class="word">Son siniestros / malvados</span>
+        <span class="word">Relacionados con el comunismo</span>
+        <span class="word">Mejores en matemáticas</span>
+        <span class="word">Gemelos espejo</span>
+      </div>
+    </div>
+    <div class="insight">Existe una <strong>brecha de información sobre accesibilidad digital</strong>: hay opciones de adaptación tecnológica que no están llegando a quienes las necesitan. En cuanto a creencias, casi la totalidad conoce al menos un mito — oscilando entre lo demoníaco y lo excepcional. Esta <strong>contradicción irresuelta refuerza la necesidad de información real y referentes propios</strong>.</div>
+  </div>
+
+  <!-- OPINION -->
+  <div id="opinion" class="section">
+    <p class="sec-title">Opinión y <span>propuestas</span></p>
+    <div class="stat-strip">
+      <div class="stat-card"><div class="val">70%</div><div class="lbl">tiene presente su lateralidad en mayor o menor medida</div></div>
+      <div class="stat-card"><div class="val">9%</div><div class="lbl">la considera parte fundamental de su identidad</div></div>
+      <div class="stat-card"><div class="val">8%</div><div class="lbl">nunca se había planteado su condición de zurda/o</div></div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-label">¿Tienes presente tu condición de persona zurda?</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="c_identidad" role="img" aria-label="Conciencia de condición zurda"></canvas></div>
+    </div>
+    <div class="chart-card full">
+      <div class="chart-label">Una palabra para describir ser zurdo/a en Chile hoy</div>
+      <div class="word-cloud">
+        <span class="word big">Adaptación</span>
+        <span class="word big">Diferente</span>
+        <span class="word big">Incómodo</span>
+        <span class="word med">Especial</span>
+        <span class="word med">Desafío</span>
+        <span class="word med">Normal</span>
+        <span class="word">Invisible</span>
+        <span class="word">Orgullo</span>
+        <span class="word">Complicado</span>
+        <span class="word">Única</span>
+        <span class="word">Creativo</span>
+        <span class="word">Siniestro</span>
+      </div>
+    </div>
+    <div class="insight">La experiencia zurda <strong>genera una conciencia propia, discreta pero real</strong>. El vocabulario que emerge oscila entre la resignación (<em>incómodo, desafío, invisible</em>) y el orgullo (<em>especial, creativo, orgullo</em>). Esto confirma que <strong>existe una identidad zurda latente esperando ser nombrada y celebrada</strong> — que es precisamente el propósito de <em>Zurdos: La otra mano</em>.</div>
+  </div>
+
+</main>
+
+<footer>
+  <span>Zurdos: La otra mano</span> · Paula Oyarzo Silva · Diseño Gráfico UST Puerto Montt · 2026
+</footer>
+
+<script>
+const MG = '#e0007a', MG2 = '#ff4da6', MG3 = '#b00060';
+const GR = '#555555', GR2 = '#888888', GR3 = '#333333';
+
+const tip = {
+  backgroundColor: '#1a1a1a',
+  titleColor: '#f0ede8',
+  bodyColor: '#aaa',
+  borderColor: 'rgba(224,0,122,0.35)',
+  borderWidth: 1,
+  callbacks: { label: ctx => ` ${ctx.raw} personas (${Math.round(ctx.raw/192*100)}%)` }
+};
+
+function donut(id, labels, data, colors) {
+  new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 5 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: { legend: { display: false }, tooltip: tip }
+    }
+  });
+}
+
+function hbar(id, labels, data, colors) {
+  const wrap = document.getElementById(id).parentElement;
+  wrap.style.height = Math.max(labels.length * 42 + 24, 100) + 'px';
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors || MG, borderRadius: 4, borderSkipped: false }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: tip },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#666', font: { size: 10, family: 'Montserrat' } } },
+        y: { grid: { display: false }, ticks: { color: '#999', font: { size: 10, family: 'Montserrat' } } }
+      }
+    }
+  });
+}
+
+function vbar(id, labels, data, colors) {
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors || Array(data.length).fill(MG), borderRadius: 4 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: tip },
+      scales: {
+        y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#666', font: { size: 10, family: 'Montserrat' } } },
+        x: { grid: { display: false }, ticks: { color: '#999', font: { size: 10, family: 'Montserrat' } } }
+      }
+    }
+  });
+}
+
+function show(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// PERFIL
+donut('c_edad', ['Antes de 4 años','4–6 años','No recuerda','7–10 años'], [89,55,39,6], [MG,MG2,GR,GR2]);
+donut('c_rango', ['26–35 años','36–50 años','18–25 años','50+ años','<18 años'], [80,44,42,13,11], [MG,MG2,MG3,GR,GR2]);
+hbar('c_familia', ['No','Sí, familiares directos','Sí, familia extendida','No lo sé'], [65,59,50,15], [GR,MG,MG2,GR2]);
+
+// ESCOLAR
+donut('c_tinta', ['A veces','Sí, siempre','Casi nunca'], [86,66,37], [MG,MG2,GR]);
+donut('c_correccion', ['No, nunca','Sí alguna vez','No recuerda','Sí, insistentemente'], [115,39,18,18], [GR3,MG,GR2,MG2]);
+hbar('c_escritura', ['Sin adaptación','Varía según situación','Inclina el papel','Giro de muñeca','Inclin. + giro','Otras combinaciones'], [53,34,33,23,13,36], [GR2,MG2,MG,MG3,'#cc0066',GR]);
+
+// OBJETOS
+donut('c_espiral', ['Muy incómodo','A veces molesta','Me he adaptado','No uso espiral'], [94,63,25,7], [MG,MG2,GR,GR2]);
+donut('c_tijeras', ['Aprendió con normales','Tiene tijeras zurdo','Las evita','Nunca se lo planteó'], [132,24,17,16], [MG,MG2,GR,GR2]);
+hbar('c_mouse', ['Adaptado mano derecha','Izquierda sin configurar','Izquierda con configuración'], [152,29,8], [MG,MG2,GR2]);
+
+// ESPACIOS
+donut('c_silla', ['Siempre fue problema','A veces','Había sillas adaptadas','No aplica'], [86,53,33,18], [MG,MG2,GR,GR2]);
+donut('c_codos', ['Sí, alguna vez','No, nunca','Sí, constantemente'], [101,50,42], [MG,GR,MG2]);
+
+// INCLUSION
+hbar('c_config', ['No, y no sabía que podía','No, aunque sabía','Sí, lo hice','Lo intenté sin resultado'], [70,87,27,6], [MG2,GR,MG,GR2]);
+
+// OPINION
+vbar('c_identidad', ['Sí, alguna vez','Sí, constantemente','No hay problema','Rara vez','Cuido dónde me siento'], [101,42,22,16,8], [MG,MG2,GR,GR2,'#cc0066']);
+</script>
+
+</body>
+</html>
